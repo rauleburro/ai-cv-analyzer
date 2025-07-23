@@ -2,7 +2,7 @@
 import streamlit as st
 import os
 from database import create_table, add_cv, get_all_cvs, clear_database, update_cv_analysis, save_job_description, get_job_description, get_unanalyzed_cvs, save_analysis_result
-from analyzer import analyze_cv
+from analyzer import analyze_cv, get_api_key
 from PyPDF2 import PdfReader
 from utils import parse_json_result, navigate_to_page
 
@@ -12,6 +12,37 @@ st.set_page_config(
     page_icon="📄",
     layout="wide"
 )
+
+# --- Environment Configuration Check ---
+def check_environment():
+    """Verifica que las variables de entorno estén configuradas"""
+    api_key = get_api_key()
+    
+    if not api_key:
+        st.error("""
+        ❌ **Error de Configuración**
+        
+        La variable `GEMINI_API_KEY` no está configurada.
+        
+        **Para desarrollo local:**
+        - Crea un archivo `.env` con: `GEMINI_API_KEY=tu_api_key`
+        
+        **Para deploy en Streamlit Cloud:**
+        - Ve a la configuración de tu app en Streamlit Cloud
+        - En la sección "Secrets", agrega: `GEMINI_API_KEY = "tu_api_key"`
+        """)
+        st.stop()
+    
+    # Mostrar indicador de entorno
+    if hasattr(st, 'secrets') and 'GEMINI_API_KEY' in st.secrets:
+        st.success("✅ Configuración de producción detectada")
+    else:
+        st.info("🔧 Modo desarrollo local")
+    
+    return api_key
+
+# Verificar configuración al inicio
+api_key = check_environment()
 
 # Initialize session state
 if "current_page" not in st.session_state:
